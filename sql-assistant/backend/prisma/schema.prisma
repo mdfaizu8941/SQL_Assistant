@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  passwordHash  String
+  role          String   @default("USER")
+  status        String   @default("ACTIVE")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  connections   DatabaseConnection[]
+  history       QueryHistory[]
+  auditLogs     AuditLog[]
+}
+
+model DatabaseConnection {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  name         String
+  host         String
+  port         Int      @default(3306)
+  dbUser       String
+  dbPassword   String
+  databaseName String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model QueryHistory {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  prompt          String   @db.Text
+  generatedSql    String   @db.Text
+  executionTimeMs Int?
+  status          String   @default("PENDING") // PENDING, SUCCESS, ERROR
+  createdAt       DateTime @default(now())
+}
+
+model AuditLog {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  email          String
+  role           String
+  query          String   @db.Text
+  connectionId   Int?
+  ipAddress      String?
+  status         String   // SUCCESS, ERROR
+  rowsAffected   Int?
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FailedLogin {
+  id        Int      @id @default(autoincrement())
+  email     String
+  ipAddress String?
+  createdAt DateTime @default(now())
+}

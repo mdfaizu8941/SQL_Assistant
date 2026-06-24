@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const database_1 = require("../controllers/database");
+const auth_1 = require("../middlewares/auth");
+const auth_2 = require("../middlewares/auth");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.post('/add', auth_2.requireManager, database_1.addConnection);
+router.get('/', database_1.getConnections);
+router.post('/test', auth_2.requireManager, database_1.testConnection);
+router.get('/:connectionId/schema', database_1.getSchema);
+exports.default = router;
