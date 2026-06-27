@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requireAdmin = exports.requireManager = exports.requireUser = exports.authenticate = exports.authenticateJWT = void 0;
+exports.requireAdmin = exports.requireUser = exports.authenticate = exports.authenticateJWT = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const authenticateJWT = async (req, res, next) => {
@@ -46,30 +46,9 @@ const requireUser = (req, res, next) => {
     next();
 };
 exports.requireUser = requireUser;
-const requireManager = (req, res, next) => {
-    if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
-        return;
-    }
-    const { role, status } = req.user;
-    if (role === 'ADMIN') {
-        next();
-        return;
-    }
-    if (role === 'DATABASE_MANAGER' && status === 'APPROVED') {
-        next();
-        return;
-    }
-    res.status(403).json({ error: 'Forbidden: Requires approved Database Manager privileges.' });
-};
-exports.requireManager = requireManager;
 const requireAdmin = (req, res, next) => {
     if (!req.user) {
         res.status(401).json({ error: 'Authentication required' });
-        return;
-    }
-    if (req.user.role !== 'ADMIN') {
-        res.status(403).json({ error: 'Forbidden: Requires Administrator privileges.' });
         return;
     }
     next();

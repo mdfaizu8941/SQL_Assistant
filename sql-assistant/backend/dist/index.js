@@ -41,12 +41,16 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const database_1 = __importDefault(require("./routes/database"));
 const ai_1 = __importDefault(require("./routes/ai"));
 const history_1 = __importDefault(require("./routes/history"));
-const admin_1 = __importDefault(require("./routes/admin"));
+const dataset_1 = __importDefault(require("./routes/dataset"));
+const savedQuery_1 = __importDefault(require("./routes/savedQuery"));
+const aiChat_1 = __importDefault(require("./routes/aiChat"));
 app.use('/api/auth', authLimiter, auth_1.default);
 app.use('/api/database', database_1.default);
 app.use('/api/ai', aiLimiter, ai_1.default);
 app.use('/api/history', history_1.default);
-app.use('/api/admin', admin_1.default);
+app.use('/api/dataset', dataset_1.default);
+app.use('/api/saved-query', savedQuery_1.default);
+app.use('/api/ai-chat', aiChat_1.default);
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });

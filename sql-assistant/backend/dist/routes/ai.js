@@ -9,4 +9,6 @@ router.post('/generate', ai_1.generateQuery);
 router.post('/explain', ai_1.explainQuery);
 router.post('/execute', ai_1.executeQuery);
 router.post('/validate', ai_1.validateQuery);
+router.post('/generate-schema', ai_1.generateSchema);
+router.post('/execute-schema', ai_1.executeSchema);
 exports.default = router;

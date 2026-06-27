@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const savedQuery_1 = require("../controllers/savedQuery");
+const auth_1 = require("../middlewares/auth");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.post('/save', savedQuery_1.saveQuery);
+router.get('/', savedQuery_1.getSavedQueries);
+router.post('/:id/favorite', savedQuery_1.toggleFavorite);
+router.delete('/:id', savedQuery_1.deleteSavedQuery);
+exports.default = router;

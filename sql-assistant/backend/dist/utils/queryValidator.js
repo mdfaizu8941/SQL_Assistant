@@ -27,8 +27,8 @@ const checkQueryPermissions = (role, sql) => {
     if (role === 'ADMIN') {
         return { allowed: true };
     }
-    // Database Manager can execute SELECT, INSERT, UPDATE, DELETE (CRUD)
-    if (role === 'MANAGER') {
+    // Read-only User (USER) can execute SELECT and workspace queries
+    if (role === 'USER') {
         const allowedCommands = [
             'select',
             'insert',
@@ -38,24 +38,16 @@ const checkQueryPermissions = (role, sql) => {
             'describe',
             'explain',
             'use',
+            'create',
+            'drop',
+            'alter',
         ];
         if (allowedCommands.includes(firstWord)) {
             return { allowed: true };
         }
         return {
             allowed: false,
-            reason: `Database Manager role is restricted from executing '${firstWord.toUpperCase()}' commands. Only CRUD operations (SELECT, INSERT, UPDATE, DELETE) are allowed.`,
-        };
-    }
-    // Read-only User (USER) can execute SELECT, SHOW, DESCRIBE, EXPLAIN, USE
-    if (role === 'USER') {
-        const allowedCommands = ['select', 'show', 'describe', 'explain', 'use'];
-        if (allowedCommands.includes(firstWord)) {
-            return { allowed: true };
-        }
-        return {
-            allowed: false,
-            reason: `Read-Only User role is restricted from executing '${firstWord.toUpperCase()}' commands. Only SELECT queries are allowed.`,
+            reason: `User role is restricted from executing '${firstWord.toUpperCase()}' commands.`,
         };
     }
     return { allowed: false, reason: 'Unknown or unauthorized role.' };

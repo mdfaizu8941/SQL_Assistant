@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import api from '../services/api';
 
 interface User {
   id: number;
@@ -10,8 +11,9 @@ interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
-  login: (user: User, token: string) => void;
-  logout: () => void;
+  refreshToken: string | null;
+  login: (user: User, token: string, refreshToken: string) => void;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -24,14 +26,25 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   })(),
   token: localStorage.getItem('token'),
-  login: (user, token) => {
+  refreshToken: localStorage.getItem('refreshToken'),
+  login: (user, token, refreshToken) => {
     localStorage.setItem('token', token);
+    localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(user));
-    set({ user, token });
+    set({ user, token, refreshToken });
   },
-  logout: () => {
+  logout: async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        await api.post('/auth/logout');
+      } catch (err) {
+        console.warn('Failed to notify logout to backend:', err);
+      }
+    }
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    set({ user: null, token: null });
+    set({ user: null, token: null, refreshToken: null });
   },
 }));

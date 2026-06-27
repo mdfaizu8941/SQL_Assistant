@@ -9,27 +9,40 @@ datasource db {
 model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique
-  passwordHash  String
+  passwordHash  String?
+  name          String?
   role          String   @default("USER")
   status        String   @default("ACTIVE")
+  refreshToken  String?  @db.VarChar(500)
+  resetToken    String?  @db.VarChar(500)
+  resetExpiry   DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  connections   DatabaseConnection[]
-  history       QueryHistory[]
-  auditLogs     AuditLog[]
+  connections      DatabaseConnection[]
+  history          QueryHistory[]
+  auditLogs        AuditLog[]
+  tableMetadata    TableMetadata[]
+  databaseMetadata DatabaseMetadata[]
+  savedQueries     SavedQuery[]
+  aiConversations  AIConversation[]
+  datasets         Dataset[]
 }
 
 model DatabaseConnection {
   id           Int      @id @default(autoincrement())
   userId       Int
-  user         User     @relation(fields: [userId], references: [id])
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name         String
   host         String
   port         Int      @default(3306)
   dbUser       String
   dbPassword   String
   databaseName String
+  ownerId      Int?
+  ownerRole    String?
+  visibility   String   @default("PRIVATE")
+  createdBy    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -37,12 +50,20 @@ model DatabaseConnection {
 model QueryHistory {
   id              Int      @id @default(autoincrement())
   userId          Int
-  user            User     @relation(fields: [userId], references: [id])
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   prompt          String   @db.Text
   generatedSql    String   @db.Text
   executionTimeMs Int?
   status          String   @default("PENDING") // PENDING, SUCCESS, ERROR
+  ownerId         Int?
+  ownerRole       String?
+  visibility      String   @default("PRIVATE")
+  createdBy       String?
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt @default(now())
+  isAiGenerated   Boolean  @default(false)
+  databaseUsed    String?
+  resultCount     Int?
 }
 
 model AuditLog {
@@ -53,9 +74,14 @@ model AuditLog {
   query          String   @db.Text
   connectionId   Int?
   ipAddress      String?
-  status         String   // SUCCESS, ERROR
+  status         String   // SUCCESS, ERROR, BLOCKED
   rowsAffected   Int?
+  ownerId        Int?
+  ownerRole      String?
+  visibility     String   @default("PRIVATE")
+  createdBy      String?
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt @default(now())
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -64,4 +90,84 @@ model FailedLogin {
   email     String
   ipAddress String?
   createdAt DateTime @default(now())
+}
+
+model TableMetadata {
+  id           Int      @id @default(autoincrement())
+  tableName    String
+  physicalName String   @unique
+  ownerId      Int
+  ownerRole    String
+  visibility   String   @default("PRIVATE")
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt @default(now())
+  user         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, tableName])
+}
+
+model DatabaseMetadata {
+  id           Int      @id @default(autoincrement())
+  dbName       String
+  physicalName String   @unique
+  ownerId      Int
+  ownerRole    String
+  visibility   String   @default("PRIVATE")
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt @default(now())
+  user         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, dbName])
+}
+
+model AIConversation {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String   @default("New Chat")
+  messages        String?  @db.LongText
+  isPinned        Boolean  @default(false)
+  prompt          String   @db.Text
+  generatedSql    String   @db.Text
+  executionResult String?  @db.Text
+  databaseUsed    String?
+  ownerId         Int
+  ownerRole       String
+  visibility      String   @default("PRIVATE")
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model SavedQuery {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  queryName  String
+  sql        String   @db.Text
+  isFavorite Boolean  @default(false)
+  ownerId    Int
+  ownerRole  String
+  visibility String   @default("PRIVATE")
+  createdBy  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Dataset {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName   String
+  tableName  String
+  rowCount   Int
+  fileSize   Int
+  ownerId    Int
+  ownerRole  String
+  visibility String   @default("PRIVATE")
+  createdBy  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

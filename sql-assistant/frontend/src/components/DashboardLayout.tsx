@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Database, MessageSquare, History, Settings, LogOut, LayoutDashboard, Menu, X, Shield, Users, Terminal, ShieldAlert } from 'lucide-react';
+import { Database, MessageSquare, History, LogOut, LayoutDashboard, Menu, X } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useState, useEffect } from 'react';
 
@@ -39,20 +39,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [logout]);
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'SQL Assistant', href: '/assistant', icon: MessageSquare },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Query Generator', href: '/assistant', icon: MessageSquare },
     { name: 'Schema Explorer', href: '/schema', icon: Database },
-    { name: 'Query History', href: '/history', icon: History },
-    ...((user?.role === 'ADMIN' || (user?.role === 'DATABASE_MANAGER' && user?.status === 'APPROVED'))
-      ? [{ name: 'Database Settings', href: '/database', icon: Settings }]
-      : []),
-    ...(user?.role === 'ADMIN'
-      ? [
-          { name: 'User Management', href: '/admin/users', icon: Users },
-          { name: 'Security Dashboard', href: '/admin/security', icon: Shield },
-          { name: 'Audit Logs', href: '/admin/audit-logs', icon: Terminal }
-        ]
-      : [])
+    { name: 'Query History', href: '/history', icon: History }
   ];
 
   return (
@@ -76,7 +66,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">
               <Database className="w-5 h-5 text-primary" />
             </div>
-            <span className="font-bold text-lg tracking-tight text-slate-100">SQL Assistant</span>
+            <span className="font-bold text-lg tracking-tight text-slate-100">Query Generator</span>
           </div>
           <button 
             className="ml-auto lg:hidden text-slate-400 hover:text-slate-100"
@@ -113,7 +103,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-200 truncate">{user?.email}</p>
-              <p className="text-xs text-slate-500 truncate capitalize">{user?.role?.toLowerCase()?.replace('_', ' ')}</p>
+              <p className="text-xs text-slate-500 truncate">Standard User</p>
             </div>
           </div>
           <button
@@ -142,18 +132,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         <main className="flex-1 overflow-auto bg-slate-950 p-4 sm:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto h-full">
-            {user?.role === 'DATABASE_MANAGER' && user?.status === 'PENDING' && (
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 flex items-start gap-3">
-                <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-bold text-amber-400 text-sm">Awaiting Administrator Approval</h4>
-                  <p className="text-xs text-slate-300 mt-1">
-                    Your Database Manager account is pending review. You can run and generate read-only SQL queries, but you cannot connect databases or alter configuration until an administrator activates your status.
-                  </p>
-                </div>
-              </div>
-            )}
+          <div className="max-w-[1700px] w-full mx-auto h-full px-2 sm:px-4 md:px-6">
+
             {children}
           </div>
         </main>

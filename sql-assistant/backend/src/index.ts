@@ -45,13 +45,17 @@ import authRoutes from './routes/auth';
 import databaseRoutes from './routes/database';
 import aiRoutes from './routes/ai';
 import historyRoutes from './routes/history';
-import adminRoutes from './routes/admin';
+import datasetRoutes from './routes/dataset';
+import savedQueryRoutes from './routes/savedQuery';
+import aiChatRoutes from './routes/aiChat';
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/database', databaseRoutes);
 app.use('/api/ai', aiLimiter, aiRoutes);
 app.use('/api/history', historyRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/dataset', datasetRoutes);
+app.use('/api/saved-query', savedQueryRoutes);
+app.use('/api/ai-chat', aiChatRoutes);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
@@ -59,3 +63,4 @@ app.listen(port, () => {
 
 // Keepalive interval to ensure the Node process stays alive in the runner environment
 setInterval(() => {}, 60000);
+// Trigger nodemon reload after script update

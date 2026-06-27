@@ -45,7 +45,7 @@ const updateUserRole = async (req, res) => {
     try {
         const { id } = req.params;
         const { role } = req.body;
-        if (!['USER', 'DATABASE_MANAGER', 'ADMIN'].includes(role)) {
+        if (!['USER', 'ADMIN'].includes(role)) {
             res.status(400).json({ error: 'Invalid role selection' });
             return;
         }
@@ -65,7 +65,7 @@ const updateUserStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        if (!['PENDING', 'APPROVED', 'REJECTED', 'ACTIVE', 'DISABLED'].includes(status)) {
+        if (!['ACTIVE', 'DISABLED'].includes(status)) {
             res.status(400).json({ error: 'Invalid status selection' });
             return;
         }

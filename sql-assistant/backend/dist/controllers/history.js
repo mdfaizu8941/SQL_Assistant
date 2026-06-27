@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSecurityStats = exports.getAuditLogs = exports.getAnalytics = exports.getHistory = void 0;
+exports.clearHistory = exports.deleteHistoryItem = exports.getAnalytics = exports.getHistory = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const getHistory = async (req, res) => {
     try {
@@ -34,17 +34,74 @@ const getAnalytics = async (req, res) => {
         }
         const totalQueries = await prisma_1.default.queryHistory.count({ where: { userId } });
         const successfulQueries = await prisma_1.default.queryHistory.count({ where: { userId, status: 'SUCCESS' } });
+        const failedQueries = await prisma_1.default.queryHistory.count({ where: { userId, status: 'ERROR' } });
         const successRate = totalQueries > 0 ? (successfulQueries / totalQueries) * 100 : 0;
         const recentQueries = await prisma_1.default.queryHistory.findMany({
             where: { userId },
             orderBy: { createdAt: 'desc' },
-            take: 5,
+            take: 10,
         });
+        const totalDatabases = await prisma_1.default.databaseMetadata.count({
+            where: { ownerId: userId }
+        });
+        const totalTables = await prisma_1.default.tableMetadata.count({
+            where: { ownerId: userId }
+        });
+        const aiChatsCount = await prisma_1.default.aIConversation.count({
+            where: { userId }
+        });
+        const totalDatasets = await prisma_1.default.dataset.count({
+            where: { userId }
+        });
+        // Get distinct databases used recently from history or metadata
+        const distinctDbs = await prisma_1.default.databaseMetadata.findMany({
+            where: { ownerId: userId },
+            select: { dbName: true, physicalName: true },
+            take: 5
+        });
+        const recentlyUsedDatabases = distinctDbs.map(d => d.dbName);
+        // Calculate daily trend data for the last 7 active days (or 7 calendar days)
+        const historyForTrend = await prisma_1.default.queryHistory.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'asc' },
+            select: { createdAt: true, status: true, executionTimeMs: true }
+        });
+        const dailyStats = {};
+        for (const item of historyForTrend) {
+            const dateStr = item.createdAt.toISOString().split('T')[0];
+            if (!dailyStats[dateStr]) {
+                dailyStats[dateStr] = { success: 0, failed: 0, totalTime: 0, count: 0 };
+            }
+            if (item.status === 'SUCCESS') {
+                dailyStats[dateStr].success++;
+            }
+            else if (item.status === 'ERROR') {
+                dailyStats[dateStr].failed++;
+            }
+            if (item.executionTimeMs) {
+                dailyStats[dateStr].totalTime += item.executionTimeMs;
+                dailyStats[dateStr].count++;
+            }
+        }
+        const trendData = Object.entries(dailyStats).map(([date, stats]) => ({
+            date,
+            success: stats.success,
+            failed: stats.failed,
+            avgTimeMs: stats.count > 0 ? Math.round(stats.totalTime / stats.count) : 0,
+            successRate: (stats.success + stats.failed) > 0 ? Math.round((stats.success / (stats.success + stats.failed)) * 100) : 0
+        })).slice(-7); // take last 7 days
         res.json({
             totalQueries,
             successfulQueries,
+            failedQueries,
             successRate: Math.round(successRate * 100) / 100,
-            recentQueries
+            recentQueries,
+            totalDatabases,
+            totalTables,
+            aiChatsCount,
+            totalDatasets,
+            recentlyUsedDatabases,
+            trendData
         });
     }
     catch (error) {
@@ -53,64 +110,51 @@ const getAnalytics = async (req, res) => {
     }
 };
 exports.getAnalytics = getAnalytics;
-const getAuditLogs = async (req, res) => {
+const deleteHistoryItem = async (req, res) => {
     try {
-        const auditLogs = await prisma_1.default.auditLog.findMany({
-            include: {
-                user: {
-                    select: {
-                        email: true,
-                        role: true
-                    }
-                }
-            },
-            orderBy: { createdAt: 'desc' },
-            take: 100
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const { id } = req.params;
+        const record = await prisma_1.default.queryHistory.findUnique({
+            where: { id: Number(id) }
         });
-        const connections = await prisma_1.default.databaseConnection.findMany({
-            select: {
-                id: true,
-                name: true
-            }
+        if (!record) {
+            res.status(404).json({ error: 'History record not found' });
+            return;
+        }
+        if (record.userId !== userId) {
+            res.status(403).json({ error: 'Forbidden: You do not own this history item.' });
+            return;
+        }
+        await prisma_1.default.queryHistory.delete({
+            where: { id: Number(id) }
         });
-        const connectionMap = new Map(connections.map(c => [c.id, c.name]));
-        const mappedLogs = auditLogs.map(log => ({
-            ...log,
-            connectionName: log.connectionId ? connectionMap.get(log.connectionId) || 'Unknown DB' : 'None'
-        }));
-        res.json({ auditLogs: mappedLogs });
+        res.json({ success: true, message: 'History item deleted successfully' });
     }
     catch (error) {
-        console.error('Error fetching audit logs:', error);
-        res.status(500).json({ error: 'Failed to fetch audit logs' });
+        console.error('Error deleting history item:', error);
+        res.status(500).json({ error: 'Failed to delete history item' });
     }
 };
-exports.getAuditLogs = getAuditLogs;
-const getSecurityStats = async (req, res) => {
+exports.deleteHistoryItem = deleteHistoryItem;
+const clearHistory = async (req, res) => {
     try {
-        const totalUsers = await prisma_1.default.user.count();
-        const activeUsers = await prisma_1.default.user.count({ where: { status: 'ACTIVE' } });
-        const totalQueries = await prisma_1.default.auditLog.count({ where: { NOT: { status: 'BLOCKED' } } });
-        const blockedCount = await prisma_1.default.auditLog.count({ where: { status: 'BLOCKED' } });
-        const failedLogins = await prisma_1.default.failedLogin.count();
-        const pendingApprovals = await prisma_1.default.user.count({ where: { role: 'DATABASE_MANAGER', status: 'PENDING' } });
-        const recentAuditLogs = await prisma_1.default.auditLog.findMany({
-            orderBy: { createdAt: 'desc' },
-            take: 10,
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        await prisma_1.default.queryHistory.deleteMany({
+            where: { userId }
         });
-        res.json({
-            totalUsers,
-            activeUsers,
-            totalQueries,
-            blockedCount,
-            failedLogins,
-            pendingApprovals,
-            recentAuditLogs
-        });
+        res.json({ success: true, message: 'History cleared successfully' });
     }
     catch (error) {
-        console.error('Error fetching security stats:', error);
-        res.status(500).json({ error: 'Failed to fetch security stats' });
+        console.error('Error clearing history:', error);
+        res.status(500).json({ error: 'Failed to clear history' });
     }
 };
-exports.getSecurityStats = getSecurityStats;
+exports.clearHistory = clearHistory;

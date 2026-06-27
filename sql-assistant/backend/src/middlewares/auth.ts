@@ -51,30 +51,11 @@ export const requireUser = (req: AuthRequest, res: Response, next: NextFunction)
   next();
 };
 
-export const requireManager = (req: AuthRequest, res: Response, next: NextFunction): void => {
-  if (!req.user) {
-    res.status(401).json({ error: 'Authentication required' });
-    return;
-  }
-  const { role, status } = req.user;
-  if (role === 'ADMIN') {
-    next();
-    return;
-  }
-  if (role === 'DATABASE_MANAGER' && status === 'APPROVED') {
-    next();
-    return;
-  }
-  res.status(403).json({ error: 'Forbidden: Requires approved Database Manager privileges.' });
-};
+
 
 export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
-    return;
-  }
-  if (req.user.role !== 'ADMIN') {
-    res.status(403).json({ error: 'Forbidden: Requires Administrator privileges.' });
     return;
   }
   next();
