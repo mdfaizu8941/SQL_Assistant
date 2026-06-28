@@ -23,15 +23,5 @@
       "src": "/(.*)",
       "dest": "sql-assistant/frontend/dist/$1"
     }
-  ],
-  "env": {
-    "DATABASE_URL": "@database-url",
-    "JWT_SECRET": "@jwt-secret",
-    "AI_PROVIDER": "@ai-provider",
-    "DEFAULT_AI_MODEL": "@default-ai-model",
-    "GEMINI_API_KEY": "@gemini-api-key",
-    "OPENAI_API_KEY": "@openai-api-key",
-    "DEEPSEEK_API_KEY": "@deepseek-api-key",
-    "RESEND_API_KEY": "@resend-api-key"
-  }
+  ]
 }
