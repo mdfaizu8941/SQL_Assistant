@@ -1,17 +1,16 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "buildCommand": "cd sql-assistant/frontend && npm install && npm run build",
-  "outputDirectory": "sql-assistant/frontend/dist",
-  "installCommand": "cd sql-assistant/backend && npm install",
   "builds": [
     {
       "src": "sql-assistant/backend/api/index.ts",
       "use": "@vercel/node"
     },
     {
-      "src": "sql-assistant/frontend/dist/**",
-      "use": "@vercel/static"
+      "src": "sql-assistant/frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
     }
   ],
   "routes": [
@@ -21,7 +20,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "sql-assistant/frontend/dist/$1"
+      "dest": "sql-assistant/frontend/$1"
     }
   ]
 }
