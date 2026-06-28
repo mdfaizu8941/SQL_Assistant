@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: API_BASE_URL,
 });
 
 api.interceptors.request.use((config) => {
@@ -49,7 +51,7 @@ api.interceptors.response.use(
       if (refreshToken) {
         try {
           // Use direct axios call to avoid recursion
-          const { data } = await axios.post('http://localhost:3000/api/auth/refresh', { refreshToken });
+          const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
           const newAccessToken = data.token;
           const newRefreshToken = data.refreshToken;
 

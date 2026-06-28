@@ -1,0 +1,37 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "buildCommand": "cd sql-assistant/frontend && npm install && npm run build",
+  "outputDirectory": "sql-assistant/frontend/dist",
+  "installCommand": "cd sql-assistant/backend && npm install",
+  "builds": [
+    {
+      "src": "sql-assistant/backend/api/index.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "sql-assistant/frontend/dist/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "sql-assistant/backend/api/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "sql-assistant/frontend/dist/$1"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "@database-url",
+    "JWT_SECRET": "@jwt-secret",
+    "AI_PROVIDER": "@ai-provider",
+    "DEFAULT_AI_MODEL": "@default-ai-model",
+    "GEMINI_API_KEY": "@gemini-api-key",
+    "OPENAI_API_KEY": "@openai-api-key",
+    "DEEPSEEK_API_KEY": "@deepseek-api-key",
+    "RESEND_API_KEY": "@resend-api-key"
+  }
+}
