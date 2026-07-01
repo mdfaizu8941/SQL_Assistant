@@ -148,7 +148,8 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
       data: { resetToken, resetExpiry }
     });
 
-    const resetLink = `http://localhost:5173/reset-password?token=${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
     console.log('\n=======================================');
     console.log(`[PASSWORD RESET DEV MODE] Reset link for ${email}:`);
     console.log(resetLink);
