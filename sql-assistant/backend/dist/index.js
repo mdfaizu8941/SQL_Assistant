@@ -56,3 +56,4 @@ app.listen(port, () => {
 });
 // Keepalive interval to ensure the Node process stays alive in the runner environment
 setInterval(() => { }, 60000);
+// Trigger nodemon reload after script update

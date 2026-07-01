@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logout = exports.refreshTokens = exports.resetPassword = exports.forgotPassword = exports.login = exports.register = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const bcrypt_1 = __importDefault(require("bcrypt"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const crypto_1 = __importDefault(require("crypto"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 // Helper to generate access and refresh tokens
@@ -38,7 +38,7 @@ const register = async (req, res) => {
             res.status(400).json({ error: 'Email address is already registered.' });
             return;
         }
-        const passwordHash = await bcrypt_1.default.hash(password, 10);
+        const passwordHash = await bcryptjs_1.default.hash(password, 10);
         const user = await prisma_1.default.user.create({
             data: {
                 email,
@@ -83,7 +83,7 @@ const login = async (req, res) => {
             res.status(403).json({ error: 'Your account has been disabled. Please contact support.' });
             return;
         }
-        const passwordMatch = await bcrypt_1.default.compare(password, user.passwordHash);
+        const passwordMatch = await bcryptjs_1.default.compare(password, user.passwordHash);
         if (!passwordMatch) {
             res.status(400).json({ error: 'Invalid email or password.' });
             return;
@@ -171,7 +171,7 @@ const resetPassword = async (req, res) => {
             res.status(400).json({ error: 'Invalid or expired reset token.' });
             return;
         }
-        const passwordHash = await bcrypt_1.default.hash(password, 10);
+        const passwordHash = await bcryptjs_1.default.hash(password, 10);
         await prisma_1.default.user.update({
             where: { id: user.id },
             data: {
